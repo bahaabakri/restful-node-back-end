@@ -9,6 +9,9 @@ const { v4: uuidv4 } = require('uuid');
 const { log } = require('console');
 const app = express();
 const socketIo = require('./util/socket')
+const graphqlHTTP = require('express-graphql').graphqlHTTP;
+const graphqlSchema = require('./graphql/schema')
+const graphqlResolvers = require('./graphql/resolvers')
 // multer configrations
 
 const fileStorage = multer.diskStorage({
@@ -43,9 +46,13 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use('/feed', feedRoutes);
-app.use('/auth', authRouter)
-
+// app.use('/feed', feedRoutes);
+// app.use('/auth', authRouter)
+// graphql
+app.use('/graphql', graphqlHTTP({
+    schema: graphqlSchema,
+    rootValue: graphqlResolvers
+}))
 // error middleware
 app.use((error, req, res, next) => {
     let statusCode = error.statusCode || 500
@@ -56,13 +63,15 @@ app.use((error, req, res, next) => {
 // connect mongoose
 mongoose.connect('mongodb+srv://bahaabakri1995:a5b0c1d1MONGODB@store.4mfhky3.mongodb.net/?retryWrites=true&w=majority').then(_ => {
     console.log('Connect')
-    const server = app.listen(8080);
-    // initialize socket.io
-    const io = socketIo.init(server)
-    // open socket connection
-    io.on('connection', socket => {
-        console.log('Socket Has Been Connected')
-    })
+    app.listen(8080);
+    // WebSocket Configs
+    // const server = app.listen(8080);
+    // // initialize socket.io
+    // const io = socketIo.init(server)
+    // // open socket connection
+    // io.on('connection', socket => {
+    //     console.log('Socket Has Been Connected')
+    // })
 })
 .catch(err => {
     console.error(err)
