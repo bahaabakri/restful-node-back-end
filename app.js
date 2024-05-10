@@ -43,6 +43,9 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, PATCH, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200)
+    }
     next();
 });
 
@@ -51,7 +54,23 @@ app.use((req, res, next) => {
 // graphql
 app.use('/graphql', graphqlHTTP({
     schema: graphqlSchema,
-    rootValue: graphqlResolvers
+    rootValue: graphqlResolvers,
+    graphiql:true,
+    formatError(err) {
+        if (!err.originalError) {
+            // Technical Error
+            return err
+        }
+        // Custom error
+        const message = err.originalError.message || 'Some thing went wrong'
+        const errors = err.originalError.errors || undefined
+        const code = err.originalError.code || 500
+        return {
+            message: message,
+            errors:errors,
+            status:code
+        }
+    }
 }))
 // error middleware
 app.use((error, req, res, next) => {
