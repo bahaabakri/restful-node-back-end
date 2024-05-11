@@ -2,6 +2,7 @@
 const User = require('../models/user')
 const bcrypt = require('bcrypt')
 const validator = require('validator')
+const jwt = require('jsonwebtoken')
 module.exports = {
     createUser: async function({userInput}, req) {
         // validation
@@ -53,6 +54,39 @@ module.exports = {
         return {
             ...createdUser._doc,
             _id:createdUser._id.toString()
+        }
+
+    },
+    login: async function({loginInput}, req) {
+        const email = loginInput.email
+        const password = loginInput.password
+        const user = await User.findOne({email: email})
+        if (!user) {
+            const error = new Error()
+            error.message = 'User doesn\'t exists, try register first'
+            error.code = 401
+            throw error
+        }
+        const isCorrectPass = await bcrypt.compare(password, user.password)
+        if (!isCorrectPass) {
+            const error = new Error()
+            error.message = 'Incorrect Password, please try again'
+            error.code = 401
+            throw error
+        }
+        // generate jwt token
+        const token = jwt.sign(
+            {
+                email: user.email,
+                userId: user._id.toString()
+            }, 'supersupersecretsign', {
+                expiresIn: '1h'
+            }
+        )
+        return {
+            ...user._doc,
+            token:token,
+            userId: user._id.toString()
         }
 
     }
