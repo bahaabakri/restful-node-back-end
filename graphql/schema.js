@@ -27,6 +27,11 @@ module.exports = graphql.buildSchema(`
         email:String!,
         password: String!
     }
+    input PostInputData {
+        title:String!,
+        content:String!,
+        imageUrl:String!
+    }
     type loginResponse {
         _id: ID!,
         email: String!,
@@ -38,7 +43,8 @@ module.exports = graphql.buildSchema(`
         userId:String!
     }
     type RootMutation {
-        createUser(userInput:UserInputData): User!
+        createUser(userInput:UserInputData): User!,
+        createPost(postInput:PostInputData): Post!
     }
     type RootQuery {
         login(loginInput: loginInputData): loginResponse!

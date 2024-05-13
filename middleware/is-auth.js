@@ -10,7 +10,7 @@ module.exports = (req, res, next) => {
             } else {
                 req.userId = decodedToken.userId
                 next()
-            }
+            }  
         }
         catch(err) {
             err.statusCode = 500

@@ -1,5 +1,6 @@
 
 const User = require('../models/user')
+const Post = require('../models/post')
 const bcrypt = require('bcrypt')
 const validator = require('validator')
 const jwt = require('jsonwebtoken')
@@ -87,6 +88,46 @@ module.exports = {
             ...user._doc,
             token:token,
             userId: user._id.toString()
+        }
+
+    },
+    createPost: async function({postInput}, req) {
+        const title = postInput.title
+        const content = postInput.content
+        const imageUrl = postInput.imageUrl
+
+        const errors = []
+        if (validator.isEmpty(title) || !validator.isLength(title, {min:5})) {
+            errors.push({
+                selector:'title',
+                message:'Title is required and should be more than 5 characters'
+            })
+        }
+        if (validator.isEmpty(content) || !validator.isLength(content, {min:5})) {
+            errors.push({
+                selector:'content',
+                message:'Content is required and it should be more than 5 characters'
+            })
+        }
+        if (errors.length > 0) {
+            const error = new Error()
+            error.message = 'Invalid Validation Input'
+            error.status = 422
+            error.errors = errors
+            throw error
+        }
+        const post = new Post({
+            title: title,
+            content: content,
+            imageUrl: imageUrl
+        })
+        const createdPost = await post.save()
+        // add post to user model
+        return {
+            ...createdPost._doc,
+            _id:createdPost._id.toString(),
+            createdAt:createdPost.createdAt.toISOString(),
+            updatedAt:createdPost.updatedAt.toISOString()
         }
 
     }
