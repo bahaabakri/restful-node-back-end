@@ -6,10 +6,12 @@ module.exports = (req, res, next) => {
             const token = tokenHeader.split(' ')[1]
             decodedToken = jwt.verify(token, 'supersupersecretsign')
             if (!decodedToken) {
-                handleUnathenticatedError()
+                req.isAuth = false
+                return next()
             } else {
                 req.userId = decodedToken.userId
-                next()
+                req.isAuth = true
+                return next()
             }  
         }
         catch(err) {
@@ -17,13 +19,17 @@ module.exports = (req, res, next) => {
             throw err
         }
     } else {
-        handleUnathenticatedError()
+        req.isAuth = false
+        return next()
     }
 }
 
-const handleUnathenticatedError = () => {
-    const err = new Error()
-    err.statusCode = 401
-    err.message = 'Unauthenticated User'
-    throw err
-}
+// const handleUnathenticatedError = () => {
+//     // const err = new Error()
+//     // err.statusCode = 401
+//     // err.message = 'Unauthenticated User'
+//     // throw err
+//     req.isAuth = false
+//     return next()
+
+// }

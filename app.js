@@ -11,7 +11,8 @@ const app = express();
 const socketIo = require('./util/socket')
 const graphqlHTTP = require('express-graphql').graphqlHTTP;
 const graphqlSchema = require('./graphql/schema')
-const graphqlResolvers = require('./graphql/resolvers')
+const graphqlResolvers = require('./graphql/resolvers');
+const isAuth = require('./middleware/is-auth');
 // multer configrations
 
 const fileStorage = multer.diskStorage({
@@ -49,6 +50,7 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use(isAuth)
 // app.use('/feed', feedRoutes);
 // app.use('/auth', authRouter)
 // graphql
@@ -65,6 +67,7 @@ app.use('/graphql', graphqlHTTP({
         const message = err.originalError.message || 'Some thing went wrong'
         const errors = err.originalError.errors || undefined
         const code = err.originalError.code || 500
+        res.setHeader('')
         return {
             message: message,
             errors:errors,

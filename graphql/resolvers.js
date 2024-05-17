@@ -92,6 +92,13 @@ module.exports = {
 
     },
     createPost: async function({postInput}, req) {
+        // check authentication
+        if(!req.isAuth) {
+            const err = new Error()
+            err.status = 401
+            err.message = 'Unauthenticated User'
+            throw err
+        }
         const title = postInput.title
         const content = postInput.content
         const imageUrl = postInput.imageUrl
@@ -116,13 +123,23 @@ module.exports = {
             error.errors = errors
             throw error
         }
+        // get user
+        const user = await User.findById(req.userId)
+        if (!user) {
+            const error = new Error()
+            error.message = 'Unauthenticated User'
+            error.status = 401
+            throw error
+        }
         const post = new Post({
             title: title,
             content: content,
-            imageUrl: imageUrl
+            imageUrl: imageUrl,
+            creator:user, 
         })
         const createdPost = await post.save()
         // add post to user model
+        user.posts.push(createdPost)
         return {
             ...createdPost._doc,
             _id:createdPost._id.toString(),
