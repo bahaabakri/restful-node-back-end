@@ -42,12 +42,17 @@ module.exports = graphql.buildSchema(`
         token:String!,
         userId:String!
     }
+    type postsData {
+        posts: [Post!]!,
+        totalPosts: Int!
+    }
     type RootMutation {
         createUser(userInput:UserInputData): User!,
         createPost(postInput:PostInputData): Post!
     }
     type RootQuery {
-        login(loginInput: loginInputData): loginResponse!
+        login(loginInput: loginInputData): loginResponse!,
+        posts: postsData!
     }
     schema {
         query:RootQuery

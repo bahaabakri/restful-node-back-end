@@ -140,6 +140,7 @@ module.exports = {
         const createdPost = await post.save()
         // add post to user model
         user.posts.push(createdPost)
+        await user.save()
         return {
             ...createdPost._doc,
             _id:createdPost._id.toString(),
@@ -147,5 +148,29 @@ module.exports = {
             updatedAt:createdPost.updatedAt.toISOString()
         }
 
+    },
+    posts: async function({arg}, req) {
+        // check authentication
+        if(!req.isAuth) {
+            const err = new Error()
+            err.status = 401
+            err.message = 'Unauthenticated User'
+            throw err
+        }
+        const totalPosts = await Post.find().countDocuments()
+        const posts = await Post.find()
+                    .sort({createdAt: -1})
+                    .populate('creator')
+        return {
+            posts: posts.map(post => {
+                return {
+                    ...post._doc,
+                    _id:post._id.toString(),
+                    createdAt:post.createdAt.toISOString(),
+                    updatedAt:post.updatedAt.toISOString()
+                }
+            }),
+            totalPosts: totalPosts
+        }
     }
 }

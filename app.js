@@ -67,7 +67,6 @@ app.use('/graphql', graphqlHTTP({
         const message = err.originalError.message || 'Some thing went wrong'
         const errors = err.originalError.errors || undefined
         const code = err.originalError.code || 500
-        res.setHeader('')
         return {
             message: message,
             errors:errors,
