@@ -13,6 +13,7 @@ const graphqlHTTP = require('express-graphql').graphqlHTTP;
 const graphqlSchema = require('./graphql/schema')
 const graphqlResolvers = require('./graphql/resolvers');
 const isAuth = require('./middleware/is-auth');
+const fileHelper = require('./util/file')
 // multer configrations
 
 const fileStorage = multer.diskStorage({
@@ -51,8 +52,33 @@ app.use((req, res, next) => {
 });
 
 app.use(isAuth)
+
+// upload image middleware
+
 // app.use('/feed', feedRoutes);
 // app.use('/auth', authRouter)
+
+app.put('/upload-image', (req, res, next) => {
+    if (!req.isAuth) {
+        const err = new Error()
+        err.statusCode = 401
+        err.message = 'Unauthenticated User'
+        throw err
+    }
+    if (!req.file) {
+        return res.status(200).json({
+            message: 'No file provided'
+        })
+    }
+    if (req.body.olaPath) {
+        fileHelper.deleteFile(req.body.olaPath)
+    }
+    const imageUrl = req.file.path
+    return res.status(200).json({
+        message: 'File uploaded successfully',
+        fileUrl: imageUrl
+    })
+})
 // graphql
 app.use('/graphql', graphqlHTTP({
     schema: graphqlSchema,

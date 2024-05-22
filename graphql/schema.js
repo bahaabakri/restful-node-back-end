@@ -52,7 +52,7 @@ module.exports = graphql.buildSchema(`
     }
     type RootQuery {
         login(loginInput: loginInputData): loginResponse!,
-        posts: postsData!
+        posts(page: Int!): postsData!
     }
     schema {
         query:RootQuery

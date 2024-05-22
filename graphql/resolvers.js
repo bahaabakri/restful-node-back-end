@@ -149,7 +149,7 @@ module.exports = {
         }
 
     },
-    posts: async function({arg}, req) {
+    posts: async function({page}, req) {
         // check authentication
         if(!req.isAuth) {
             const err = new Error()
@@ -157,10 +157,16 @@ module.exports = {
             err.message = 'Unauthenticated User'
             throw err
         }
+        const perPage = 2
+        if(!page) {
+            page = 1
+        }
         const totalPosts = await Post.find().countDocuments()
         const posts = await Post.find()
                     .sort({createdAt: -1})
                     .populate('creator')
+                    .skip(((page - 1) * perPage))
+                    .limit(perPage)
         return {
             posts: posts.map(post => {
                 return {
