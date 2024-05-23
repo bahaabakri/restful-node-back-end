@@ -178,5 +178,35 @@ module.exports = {
             }),
             totalPosts: totalPosts
         }
+    },
+    post: async function({postId}, req) {
+        // check authentication
+        if(!req.isAuth) {
+            const err = new Error()
+            err.status = 401
+            err.message = 'Unauthenticated User'
+            throw err
+        }
+        if(!postId) {
+            const err = new Error()
+            err.status = 404
+            err.message = 'Couldn\'t find post'
+            throw err
+        }
+        const post = await Post.findById(postId)
+                            .populate('creator')
+        if (!post) {
+            const err = new Error()
+            err.status = 404
+            err.message = 'Couldn\'t find post'
+            throw err
+        }
+        return {
+            ...post._doc,
+            _id:post._id.toString(),
+            createdAt:post.createdAt.toISOString(),
+            updatedAt:post.updatedAt.toISOString()
+        }
+        
     }
 }
