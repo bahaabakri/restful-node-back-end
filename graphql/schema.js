@@ -42,7 +42,7 @@ module.exports = graphql.buildSchema(`
         token:String!,
         userId:String!
     }
-    type UpdatedeletePostResponse {
+    type UpdateDeletePostResponse {
         post: Post!,
         message: String!
     }
@@ -57,8 +57,8 @@ module.exports = graphql.buildSchema(`
     type RootMutation {
         createUser(userInput:UserInputData): User!,
         createPost(postInput:PostInputData): Post!,
-        deletePost(postId:ID!): UpdatedeletePostResponse!,
-        updatePost(postId:ID!, postInput:PostInputData): UpdatedeletePostResponse!,
+        deletePost(postId:ID!): UpdateDeletePostResponse!,
+        updatePost(postId:ID!, postInput:PostInputData): UpdateDeletePostResponse!,
         updateStatus(newStatus: String!): updateGetStatus
     }
     type RootQuery {
