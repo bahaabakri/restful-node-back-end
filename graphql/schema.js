@@ -42,18 +42,30 @@ module.exports = graphql.buildSchema(`
         token:String!,
         userId:String!
     }
+    type UpdatedeletePostResponse {
+        post: Post!,
+        message: String!
+    }
     type postsData {
         posts: [Post!]!,
         totalPosts: Int!
     }
+    type updateGetStatus {
+        status: String!,
+        message: String!
+    }
     type RootMutation {
         createUser(userInput:UserInputData): User!,
-        createPost(postInput:PostInputData): Post!
+        createPost(postInput:PostInputData): Post!,
+        deletePost(postId:ID!): UpdatedeletePostResponse!,
+        updatePost(postId:ID!, postInput:PostInputData): UpdatedeletePostResponse!,
+        updateStatus(newStatus: String!): updateGetStatus
     }
     type RootQuery {
         login(loginInput: loginInputData): loginResponse!,
         posts(page: Int!): postsData!,
-        post(postId: String!): Post!
+        post(postId: ID!): Post!,
+        status: updateGetStatus!
     }
     schema {
         query:RootQuery

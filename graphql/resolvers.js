@@ -4,6 +4,8 @@ const Post = require('../models/post')
 const bcrypt = require('bcrypt')
 const validator = require('validator')
 const jwt = require('jsonwebtoken')
+const fileHelper = require ('../util/file')
+const { use } = require('../routes/feed')
 module.exports = {
     createUser: async function({userInput}, req) {
         // validation
@@ -208,5 +210,165 @@ module.exports = {
             updatedAt:post.updatedAt.toISOString()
         }
         
+    },
+    deletePost: async function({postId}, req) {
+        // check authentication
+        if(!req.isAuth) {
+            const err = new Error()
+            err.status = 401
+            err.message = 'Unauthenticated User'
+            throw err
+        }
+        if(!postId) {
+            const err = new Error()
+            err.status = 404
+            err.message = 'Couldn\'t find post'
+            throw err
+        }
+        postToDelete = await Post.findById(postId)
+                        .populate('creator')
+        if (!postToDelete) {
+            const err = new Error()
+            err.status = 404
+            err.message = 'Couldn\'t find post'
+            throw err
+        }
+        if (postToDelete.creator._id.toString() !== req.userId.toString()) {
+            const error = new Error()
+            error.status = 403
+            error.message = 'Unauthorized Action'
+            throw error
+        }
+        // delete post image
+        // if (postToDelete.imageUrl && postToDelete.imageUrl !== "undefined") {
+            fileHelper.deleteFile(postToDelete.imageUrl)
+        // }
+        // delete post
+        await postToDelete.deleteOne()
+        // delete post from user model
+        const user = await User.findById(req.userId)
+        user.posts.pull(postId)
+        await user.save()
+        return {
+            post: {
+                ...postToDelete._doc,
+                _id:postToDelete._id.toString(),
+                createdAt:postToDelete.createdAt.toISOString(),
+                updatedAt:postToDelete.updatedAt.toISOString()
+            },
+            message: 'Delete Post Successfuly'
+        }
+    },
+    updatePost: async function({postId, postInput}, req) {
+        // check authentication
+        if(!req.isAuth) {
+            const err = new Error()
+            err.status = 401
+            err.message = 'Unauthenticated User'
+            throw err
+        }
+        if(!postId) {
+            const err = new Error()
+            err.status = 404
+            err.message = 'Couldn\'t find post'
+            throw err
+        }
+        postToUpdate = await Post.findById(postId)
+                        .populate('creator')
+        if (!postToUpdate) {
+            const err = new Error()
+            err.status = 404
+            err.message = 'Couldn\'t find post'
+            throw err
+        }
+        if (postToUpdate.creator._id.toString() !== req.userId.toString()) {
+            const error = new Error()
+            error.status = 403
+            error.message = 'Unauthorized Action'
+            throw error
+        }
+        
+        const title = postInput.title
+        const content = postInput.content
+        const imageUrl = postInput.imageUrl
+        // validation
+        const errors = []
+        if (validator.isEmpty(title) || !validator.isLength(title, {min:5})) {
+            errors.push({
+                selector:'title',
+                message:'Title is required and should be more than 5 characters'
+            })
+        }
+        if (validator.isEmpty(content) || !validator.isLength(content, {min:5})) {
+            errors.push({
+                selector:'content',
+                message:'Content is required and it should be more than 5 characters'
+            })
+        }
+        if (errors.length > 0) {
+            const error = new Error()
+            error.message = 'Invalid Validation Input'
+            error.status = 422
+            error.errors = errors
+            throw error
+        }
+        postToUpdate.title = title
+        postToUpdate.content = content
+        // imageUrl is undifient if there is no file send
+        if (imageUrl !== "undefined") {
+            postToUpdate.imageUrl = imageUrl
+        }
+        await postToUpdate.save()
+        return {
+            post: {
+                ...postToUpdate._doc,
+                _id:postToUpdate._id.toString(),
+                createdAt:postToUpdate.createdAt.toISOString(),
+                updatedAt:postToUpdate.updatedAt.toISOString()
+            },
+            message: 'Updated Post Successfuly'
+        }
+    },
+    status: async function(args, req) {
+        // check authentication
+        if(!req.isAuth) {
+            const err = new Error()
+            err.status = 401
+            err.message = 'Unauthenticated User'
+            throw err
+        }
+        const user = await User.findById(req.userId)
+        if (!user) {
+            const err = new Error()
+            err.status = 404
+            err.message = 'Couldn\'t find user'
+            throw err
+        }
+        return {
+            status: user.status,
+            message: 'get status successfully'
+        }
+    },
+    updateStatus: async function({newStatus}, req) {
+        // check authentication
+        if(!req.isAuth) {
+            const err = new Error()
+            err.status = 401
+            err.message = 'Unauthenticated User'
+            throw err
+        }
+        const user = await User.findById(req.userId)
+        if (!user) {
+            const err = new Error()
+            err.status = 404
+            err.message = 'Couldn\'t find user'
+            throw err
+        }
+        user.status = newStatus
+        await user.save()
+        return {
+            status: newStatus,
+            message: 'status updated successfully'
+        }
     }
 }
